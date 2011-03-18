@@ -385,46 +385,6 @@ module ActiveRecord
         return self
       end
       alias_method :character, :char
-
-      # Overrides the abstract adapter in order to handle
-      # the DEFAULT option for the native XML datatype
-      def column(name, type, options ={})
-        # construct a column definition where @base is adaptor instance
-        column = ColumnDefinition.new(@base, name, type)
-
-        # DB2 does not accept DEFAULT NULL option for XML
-        # for table create, but does accept nullable option
-        unless type.to_s == 'xml'
-          column.null    = options[:null]
-          column.default = options[:default]
-        else
-          column.null    = options[:null]
-          # Override column object's (instance of ColumnDefinition structure)
-          # to_s which is expected to return the create_table SQL fragment
-          # and bypass DEFAULT NULL option while still appending NOT NULL
-          def column.to_s
-            sql = "#{base.quote_column_name(name)} #{type}"
-            unless self.null == nil
-              sql << " NOT NULL" if (self.null == false)
-            end
-            return sql
-          end
-        end
-
-        column.scale     = options[:scale]      if options[:scale]
-        column.precision = options[:precision]  if options[:precision]
-        # append column's limit option and yield native limits
-        if options[:limit]
-          column.limit   = options[:limit]
-        elsif @base.native_database_types[type.to_sym]
-          column.limit   = @base.native_database_types[type.to_sym][:limit] if @base.native_database_types[type.to_sym].has_key? :limit
-        end
-
-        unless @columns.include? column
-          @columns << column 
-        end
-        return self
-      end
     end
 
     # The IBM_DB Adapter requires the native Ruby driver (ibm_db)
