@@ -1271,16 +1271,13 @@ module ActiveRecord
         # Initializes the tables array
         tables = []
         # Retrieve table's metadata through IBM_DB driver
-        stmt = IBM_DB.tables(@connection, nil,
-                            @servertype.set_case(@schema))
+        stmt = IBM_DB.tables(@connection, nil, @servertype.set_case(@schema))
         if(stmt)
           begin
             # Fetches all the records available
             while tab = IBM_DB.fetch_assoc(stmt)
               # Adds the lowercase table name to the array
-              if(tab["table_type"]== 'TABLE')  #check, so that only tables are dumped,IBM_DB.tables also returns views,alias etc in the schema
-                tables << tab["table_name"].downcase
-              end
+              tables << tab["table_name"].downcase
             end
           rescue StandardError => fetch_error # Handle driver fetch errors
             error_msg = IBM_DB.getErrormsg(stmt, IBM_DB::DB_STMT )
